@@ -65,7 +65,6 @@ Documentation files are written in Markdown and located in the `docs/` directory
 
 ### Accessing Documentation
 
-- **API Documentation**: http://localhost:8000/api-docs (when backend is running)
 - **Project Documentation**: Available in the `docs/` directory
 
 ### Editing Documentation
@@ -77,7 +76,6 @@ Documentation files are written in Markdown and located in the `docs/` directory
 
 Once the backend is running, you can access:
 
-- **API Documentation**: http://localhost:8000/api-docs
 - **Web Interface**: http://localhost:3000 (if frontend is running)
 - **Health Check**: http://localhost:8000/health
 
@@ -153,8 +151,8 @@ Use the REST API to create AI agent workflows:
 If you encounter issues:
 
 1. Check the logs in `backend/logs/`
-2. Review the API documentation at http://localhost:8000/api-docs
-3. Consult the documentation in the `docs/` directory
+2. Consult the documentation in the `docs/` directory
+3. Check the health endpoint at http://localhost:8000/health
 
 ## Next Steps
 
