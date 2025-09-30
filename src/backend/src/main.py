@@ -12,7 +12,10 @@ os.environ["USE_NULLPOOL"] = "true"
 
 from fastapi import FastAPI, HTTPException, Request, Depends
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import HTMLResponse, RedirectResponse, FileResponse
+from fastapi.staticfiles import StaticFiles
 from starlette.middleware.base import BaseHTTPMiddleware
+from pathlib import Path
 
 from src.config.settings import settings
 from src.api import api_router
@@ -252,10 +255,88 @@ app.add_middleware(BaseHTTPMiddleware, dispatch=user_context_middleware)
 # Include the main API router
 app.include_router(api_router, prefix=settings.API_V1_STR)
 
+# Health check endpoint - must be defined before catch-all routes
 @app.get("/health")
 async def health():
     """Health check endpoint."""
     return {"status": "healthy"}
+
+# Setup frontend static files and root route
+frontend_static_dir = os.environ.get("FRONTEND_STATIC_DIR")
+if frontend_static_dir:
+    frontend_static_path = Path(frontend_static_dir)
+    
+    # Mount static files if they exist
+    if frontend_static_path.exists():
+        static_dir = frontend_static_path / "static"
+        if static_dir.exists():
+            logger.info(f"Mounting /static from {static_dir}")
+            app.mount("/static", StaticFiles(directory=str(static_dir)), name="static")
+        
+        # Serve favicon
+        favicon_ico = frontend_static_path / "favicon.ico"
+        if favicon_ico.exists():
+            @app.get("/favicon.ico")
+            async def serve_favicon():
+                return FileResponse(str(favicon_ico))
+        
+        # Serve manifest.json
+        manifest_json = frontend_static_path / "manifest.json"
+        if manifest_json.exists():
+            @app.get("/manifest.json")
+            async def serve_manifest():
+                return FileResponse(str(manifest_json))
+        
+        # Serve docs directory
+        docs_dir = frontend_static_path / "docs"
+        if docs_dir.exists():
+            @app.get("/docs/{filename}")
+            async def serve_docs(filename: str):
+                if filename.endswith('.md'):
+                    file_path = docs_dir / filename
+                    if file_path.exists():
+                        return FileResponse(str(file_path), media_type="text/markdown")
+                raise HTTPException(status_code=404, detail="File not found")
+        
+        # Serve index.html for root and other non-API routes
+        index_html = frontend_static_path / "index.html"
+        if index_html.exists():
+            logger.info(f"Frontend found at {index_html}, will serve SPA for root route")
+            
+            @app.get("/")
+            async def serve_root():
+                """Serve the frontend application."""
+                return FileResponse(str(index_html))
+            
+            # Catch-all route to serve SPA for any unmatched routes (except API routes)
+            @app.get("/{full_path:path}")
+            async def serve_spa(full_path: str):
+                """Serve the SPA for all unmatched routes."""
+                # Skip API routes and static files - let them 404 naturally
+                if (full_path.startswith("api/") or 
+                    full_path.startswith("api-docs") or 
+                    full_path.startswith("api-redoc") or
+                    full_path.startswith("static/")):
+                    raise HTTPException(status_code=404, detail="Not Found")
+                return FileResponse(str(index_html))
+        else:
+            logger.warning(f"Frontend index.html not found at {index_html}")
+            
+            @app.get("/")
+            async def redirect_to_docs():
+                """Redirect to API documentation when frontend is not available."""
+                if settings.DOCS_ENABLED:
+                    return RedirectResponse(url="/api-docs")
+                return {"message": "Kasal API", "version": settings.VERSION, "docs": "/api-docs"}
+else:
+    logger.info("FRONTEND_STATIC_DIR not set, frontend will not be served")
+    
+    @app.get("/")
+    async def redirect_to_docs():
+        """Redirect to API documentation when frontend is not available."""
+        if settings.DOCS_ENABLED:
+            return RedirectResponse(url="/api-docs")
+        return {"message": "Kasal API", "version": settings.VERSION, "docs": "/api-docs"}
 
 if __name__ == "__main__":
     import uvicorn
