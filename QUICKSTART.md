@@ -38,7 +38,16 @@ This single command will:
 - ✅ Build the frontend (if Node.js is available)
 - ✅ Start the server
 
-The first run takes a few minutes to install dependencies and build the frontend.
+**First Run**: The first time you run this, it will take 3-5 minutes to:
+- Install Python packages (FastAPI, SQLAlchemy, CrewAI, etc.)
+- Install Node.js packages (React, Material-UI, etc.)
+- Build the frontend React application
+- Initialize the database
+
+**Subsequent Runs**: After the first run, you can use `--skip-deps` to start faster:
+```bash
+python3 run.py --skip-deps
+```
 
 ## Access Kasal
 
@@ -47,6 +56,15 @@ Once started, access Kasal at:
 - **Web Interface**: http://127.0.0.1:8000
 - **API Documentation**: http://127.0.0.1:8000/api-docs
 - **Health Check**: http://127.0.0.1:8000/health
+
+### What Gets Created
+
+When you run Kasal for the first time, it creates:
+- `src/backend/app.db` - SQLite database with your workflows and data
+- `src/backend/logs/` - Application logs
+- `src/frontend_static/` - Built frontend files (if Node.js is available)
+
+These files/directories are already in `.gitignore` and won't be committed.
 
 ## Common Options
 
