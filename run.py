@@ -122,11 +122,13 @@ def start_backend(args):
     """Start the backend server."""
     print("\n🚀 Starting Kasal backend server...")
     
-    src_dir = Path(__file__).parent / "src"
-    entrypoint = src_dir / "entrypoint.py"
+    root_dir = Path(__file__).parent
+    src_dir = root_dir / "src"
+    backend_dir = src_dir / "backend"
     
-    if not entrypoint.exists():
-        print(f"❌ Entrypoint not found: {entrypoint}")
+    # Check if we have the backend directory structure
+    if not backend_dir.exists():
+        print(f"❌ Backend directory not found: {backend_dir}")
         return False
     
     # Set environment variables
@@ -139,7 +141,8 @@ def start_backend(args):
     
     # Database configuration
     if args.db_type == 'sqlite':
-        db_path = args.db_path or str(src_dir / "kasal.db")
+        db_path = args.db_path or str(backend_dir / "app.db")
+        env['DATABASE_TYPE'] = 'sqlite'
         env['DATABASE_URL'] = f"sqlite:///{db_path}"
         env['DATABASE_URI'] = f"sqlite+aiosqlite:///{db_path}"
         env['SQLITE_DB_PATH'] = db_path
@@ -148,14 +151,24 @@ def start_backend(args):
         if not args.db_url:
             print("❌ PostgreSQL requires --db-url parameter")
             return False
+        env['DATABASE_TYPE'] = 'postgres'
         env['DATABASE_URL'] = args.db_url
         env['DATABASE_URI'] = args.db_url
         print(f"📊 Using PostgreSQL database")
     
-    # Build the command
+    # Set frontend static directory
+    frontend_static_dir = str(src_dir / "frontend_static")
+    env['FRONTEND_STATIC_DIR'] = frontend_static_dir
+    
+    # Create logs directory
+    logs_dir = backend_dir / "logs"
+    logs_dir.mkdir(parents=True, exist_ok=True)
+    env['LOG_DIR'] = str(logs_dir)
+    
+    # Build the command - run from backend directory using src.main:app
     cmd = [
         sys.executable, "-m", "uvicorn", 
-        "entrypoint:app",
+        "src.main:app",
         "--host", args.host,
         "--port", str(args.port)
     ]
@@ -168,8 +181,8 @@ def start_backend(args):
     print("\n💡 Press Ctrl+C to stop the server\n")
     
     try:
-        # Start the server
-        subprocess.run(cmd, cwd=str(src_dir), env=env)
+        # Start the server from backend directory
+        subprocess.run(cmd, cwd=str(backend_dir), env=env)
     except KeyboardInterrupt:
         print("\n\n👋 Shutting down Kasal...")
         return True
@@ -209,7 +222,7 @@ Examples:
     
     parser.add_argument(
         '--db-path',
-        help='SQLite database file path (default: src/kasal.db)'
+        help='SQLite database file path (default: src/backend/app.db)'
     )
     
     parser.add_argument(
