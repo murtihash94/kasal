@@ -69,6 +69,7 @@ def install_backend_dependencies():
     """Install backend Python dependencies."""
     print("\n📦 Installing backend dependencies...")
     
+    # Use the main requirements.txt in src/ directory which has all dependencies
     requirements_file = Path(__file__).parent / "src" / "requirements.txt"
     
     if not requirements_file.exists():
