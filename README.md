@@ -24,14 +24,26 @@ Kasal transforms complex AI orchestration into an intuitive visual experience. D
 
 ## Get Started in Minutes
 
-### **Databricks Marketplace** (Recommended)
+### **🚀 Quick Start - Run Locally on Mac/Linux** (Simplest)
+
+Perfect for trying Kasal or local development:
+
+```bash
+git clone https://github.com/murtihash94/kasal.git
+cd kasal
+python3 run.py
+```
+
+**That's it!** Access Kasal at http://127.0.0.1:8000
+
+> **Requirements**: Python 3.9+ (Node.js optional for frontend UI)  
+> **Full Guide**: See [QUICKSTART.md](QUICKSTART.md) for detailed instructions and troubleshooting
+
+### **Databricks Marketplace** (Recommended for Production)
 Install directly from the Databricks Apps Marketplace with one click. Perfect for production use with automatic updates and enterprise support.
 
 ### **Deploy from Source**
 Use the deployment script in this codebase for custom installations and development. Ideal for customization and advanced configurations.
-
-### **Local Development**
-Quick setup for testing and development - requires Python 3.9+ and Node.js.
 
 ## See It in Action
 
